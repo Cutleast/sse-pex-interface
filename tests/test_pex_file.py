@@ -1,0 +1,53 @@
+"""
+Copyright (c) Cutleast
+"""
+
+from io import BytesIO
+from pathlib import Path
+from typing import BinaryIO
+
+from sse_pex_interface.pex_file import PexFile
+
+
+class TestPexFile:
+    """
+    Tests reading and writing an entire PEX file.
+    """
+
+    def test_parse(self) -> None:
+        """
+        Tests parsing a PEX file.
+        """
+
+        # given
+        pex_file_path: Path = Path.cwd() / "tests" / "test_data" / "_wetquestscript.pex"
+
+        # when
+        with pex_file_path.open("rb") as stream:
+            pex_file: PexFile = PexFile.parse(stream)
+
+        # then
+        assert pex_file.header.compilation_time == 1601329996
+        assert pex_file.header.source_file_name == "_WetQuestScript.psc"
+        assert pex_file.header.username == "TechAngel"
+        assert pex_file.header.machinename == "DESKTOP-O95F7AQ"
+        assert pex_file.string_table.count == 624
+
+    def test_dump(self) -> None:
+        """
+        Tests writing an entire PEX file.
+        """
+
+        # given
+        pex_file_path: Path = Path.cwd() / "tests" / "test_data" / "_wetquestscript.pex"
+        output: BinaryIO = BytesIO()
+        with pex_file_path.open("rb") as stream:
+            pex_file: PexFile = PexFile.parse(stream)
+
+        # when
+        pex_file.dump(output)
+        output.seek(0)
+        dumped_pex_file: PexFile = PexFile.parse(output)
+
+        # then
+        assert pex_file == dumped_pex_file

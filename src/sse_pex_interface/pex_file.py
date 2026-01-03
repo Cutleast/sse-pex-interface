@@ -1,0 +1,51 @@
+"""
+Copyright (c) Cutleast
+"""
+
+from typing import BinaryIO, Self
+
+from pydantic import BaseModel
+
+from sse_pex_interface.string_table import StringTable
+
+from .header import Header
+
+
+class PexFile(BaseModel):
+    """
+    Model for the entire PEX file.
+    """
+
+    header: Header
+    """The header of the PEX file."""
+
+    string_table: StringTable
+    """The string table of the PEX file."""
+
+    @classmethod
+    def parse(cls, stream: BinaryIO) -> Self:
+        """
+        Parses an entire PEX file from a stream of bytes.
+
+        Args:
+            stream (BinaryIO): Byte stream to read from.
+
+        Returns:
+            Self: The parsed PEX file.
+        """
+
+        header: Header = Header.parse(stream)
+        string_table: StringTable = StringTable.parse(stream)
+
+        return cls(header=header, string_table=string_table)
+
+    def dump(self, output: BinaryIO) -> None:
+        """
+        Writes the entire PEX file to a stream of bytes.
+
+        Args:
+            output (BinaryIO): Byte stream to write to.
+        """
+
+        self.header.dump(output)
+        self.string_table.dump(output)
