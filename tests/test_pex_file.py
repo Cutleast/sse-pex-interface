@@ -36,6 +36,8 @@ class TestPexFile:
         assert pex_file.debug_info.function_count == 14
         assert pex_file.debug_info.functions is not None
         assert len(pex_file.debug_info.functions) == 14
+        assert pex_file.user_flag_count == 2
+        assert len(pex_file.user_flags) == 2
 
     def test_dump(self) -> None:
         """
