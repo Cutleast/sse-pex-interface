@@ -2,15 +2,14 @@
 Copyright (c) Cutleast
 """
 
-from typing import BinaryIO, Self
+from typing import BinaryIO, Self, override
 
-from pydantic import BaseModel
-
+from .binary_model import BinaryModel
 from .datatypes import IntegerCodec
 from .sections import DebugInfo, Header, StringTable, UserFlag
 
 
-class PexFile(BaseModel):
+class PexFile(BinaryModel):
     """
     Model for the entire PEX file.
     """
@@ -30,18 +29,9 @@ class PexFile(BaseModel):
     user_flags: list[UserFlag]
     """The user flags of the PEX file."""
 
+    @override
     @classmethod
     def parse(cls, stream: BinaryIO) -> Self:
-        """
-        Parses an entire PEX file from a stream of bytes.
-
-        Args:
-            stream (BinaryIO): Byte stream to read from.
-
-        Returns:
-            Self: The parsed PEX file.
-        """
-
         header: Header = Header.parse(stream)
         string_table: StringTable = StringTable.parse(stream)
         debug_info: DebugInfo = DebugInfo.parse(stream)
@@ -59,19 +49,8 @@ class PexFile(BaseModel):
             user_flags=user_flags,
         )
 
+    @override
     def dump(self, output: BinaryIO) -> None:
-        """
-        Writes the entire PEX file to a stream of bytes.
-
-        Args:
-            output (BinaryIO): Byte stream to write to.
-
-        Raises:
-            ValueError:
-                When the `user_flag_count` value does not match the actual user flag
-                count.
-        """
-
         if len(self.user_flags) != self.user_flag_count:
             raise ValueError(
                 "Value of `user_flag_count` does not match actual user flag count!"

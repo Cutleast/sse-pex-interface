@@ -2,14 +2,13 @@
 Copyright (c) Cutleast
 """
 
-from typing import BinaryIO, Self
+from typing import BinaryIO, Self, override
 
-from pydantic import BaseModel
-
+from ..binary_model import BinaryModel
 from ..datatypes import IntegerCodec, StringCodec
 
 
-class StringTable(BaseModel):
+class StringTable(BinaryModel):
     """
     Model for string tables to look up member names and other stuff from.
     """
@@ -20,18 +19,9 @@ class StringTable(BaseModel):
     strings: list[str]
     """wstring[count]: The strings."""
 
+    @override
     @classmethod
     def parse(cls, stream: BinaryIO) -> Self:
-        """
-        Parses the string table from a stream of bytes.
-
-        Args:
-            stream (BinaryIO): Byte stream to read from.
-
-        Returns:
-            Self: Parsed string table.
-        """
-
         count: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
 
         strings: list[str] = []
@@ -40,17 +30,8 @@ class StringTable(BaseModel):
 
         return cls(count=count, strings=strings)
 
+    @override
     def dump(self, output: BinaryIO) -> None:
-        """
-        Writes the string table to a stream of bytes.
-
-        Args:
-            output (BinaryIO): Byte stream to write to.
-
-        Raises:
-            ValueError: When the 'count' value does not match the actual string count.
-        """
-
         if self.count != len(self.strings):
             raise ValueError("String table count does not match string count!")
 

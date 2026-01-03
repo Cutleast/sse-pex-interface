@@ -2,14 +2,13 @@
 Copyright (c) Cutleast
 """
 
-from typing import BinaryIO, Literal, Self
+from typing import BinaryIO, Literal, Self, override
 
-from pydantic import BaseModel
-
+from ..binary_model import BinaryModel
 from ..datatypes import IntegerCodec
 
 
-class DebugFunction(BaseModel):
+class DebugFunction(BinaryModel):
     """
     Model representing a debug function of a PEX file.
     """
@@ -32,18 +31,9 @@ class DebugFunction(BaseModel):
     line_numbers: list[int]
     """uint16[instruction_count]: Maps instructions to their original lines in the source."""
 
+    @override
     @classmethod
     def parse(cls, stream: BinaryIO) -> Self:
-        """
-        Parses a debug function from a stream of bytes.
-
-        Args:
-            stream (BinaryIO): Byte stream to read from.
-
-        Returns:
-            Self: The parsed debug function.
-        """
-
         object_name_index: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
         state_name_index: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
         function_name_index: int = IntegerCodec.parse(
@@ -72,14 +62,8 @@ class DebugFunction(BaseModel):
             line_numbers=line_numbers,
         )
 
+    @override
     def dump(self, output: BinaryIO) -> None:
-        """
-        Writes the debug function to a stream of bytes.
-
-        Args:
-            output (BinaryIO): Byte stream to write to.
-        """
-
         if len(self.line_numbers) != self.instruction_count:
             raise ValueError("Instruction count does not match line number count!")
 

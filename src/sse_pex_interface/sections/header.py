@@ -2,14 +2,13 @@
 Copyright (c) Cutleast
 """
 
-from typing import BinaryIO, Literal, Self
+from typing import BinaryIO, Literal, Self, override
 
-from pydantic import BaseModel
-
+from ..binary_model import BinaryModel
 from ..datatypes import IntegerCodec, StringCodec
 
 
-class Header(BaseModel):
+class Header(BinaryModel):
     """
     Model that represents the header of a PEX file.
     """
@@ -38,18 +37,9 @@ class Header(BaseModel):
     machinename: str
     """wstring: Machine name used to compile the script."""
 
+    @override
     @classmethod
     def parse(cls, stream: BinaryIO) -> Self:
-        """
-        Parses the header from a stream of bytes.
-
-        Args:
-            stream (BinaryIO): Byte stream to read from.
-
-        Returns:
-            Self: Parsed header.
-        """
-
         magic: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt32)
         major_version: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8)
         minor_version: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8)
@@ -75,14 +65,8 @@ class Header(BaseModel):
             machinename=machinename,
         )
 
+    @override
     def dump(self, output: BinaryIO) -> None:
-        """
-        Writes the header to a stream of bytes.
-
-        Args:
-            output (BinaryIO): Byte stream to write to.
-        """
-
         IntegerCodec.dump(self.magic, IntegerCodec.IntType.UInt32, output)
         IntegerCodec.dump(self.major_version, IntegerCodec.IntType.UInt8, output)
         IntegerCodec.dump(self.minor_version, IntegerCodec.IntType.UInt8, output)

@@ -2,15 +2,14 @@
 Copyright (c) Cutleast
 """
 
-from typing import BinaryIO, Optional, Self
+from typing import BinaryIO, Optional, Self, override
 
-from pydantic import BaseModel
-
+from ..binary_model import BinaryModel
 from ..datatypes import IntegerCodec
 from .debug_function import DebugFunction
 
 
-class DebugInfo(BaseModel):
+class DebugInfo(BinaryModel):
     """
     Model representing the debug info of a PEX file.
     """
@@ -29,18 +28,9 @@ class DebugInfo(BaseModel):
     functions: Optional[list[DebugFunction]]
     """list: List of functions. Only present if `has_debug_info` is non-zero."""
 
+    @override
     @classmethod
     def parse(cls, stream: BinaryIO) -> Self:
-        """
-        Parses the debug info from a stream of bytes.
-
-        Args:
-            stream (BinaryIO): Byte stream to read from.
-
-        Returns:
-            Self: The parsed debug info.
-        """
-
         has_debug_info: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8)
 
         modification_time: Optional[int] = None
@@ -62,14 +52,8 @@ class DebugInfo(BaseModel):
             functions=functions,
         )
 
+    @override
     def dump(self, output: BinaryIO) -> None:
-        """
-        Writes the debug info to a stream of bytes.
-
-        Args:
-            output (BinaryIO): Byte stream to write to.
-        """
-
         if (
             self.function_count is not None
             and self.functions is not None
