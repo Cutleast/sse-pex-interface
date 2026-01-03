@@ -6,7 +6,7 @@ from typing import BinaryIO, Self
 
 from pydantic import BaseModel
 
-from .sections import Header, StringTable
+from .sections import DebugInfo, Header, StringTable
 
 
 class PexFile(BaseModel):
@@ -19,6 +19,9 @@ class PexFile(BaseModel):
 
     string_table: StringTable
     """The string table of the PEX file."""
+
+    debug_info: DebugInfo
+    """The debug info of the PEX file."""
 
     @classmethod
     def parse(cls, stream: BinaryIO) -> Self:
@@ -34,8 +37,9 @@ class PexFile(BaseModel):
 
         header: Header = Header.parse(stream)
         string_table: StringTable = StringTable.parse(stream)
+        debug_info: DebugInfo = DebugInfo.parse(stream)
 
-        return cls(header=header, string_table=string_table)
+        return cls(header=header, string_table=string_table, debug_info=debug_info)
 
     def dump(self, output: BinaryIO) -> None:
         """
@@ -47,3 +51,4 @@ class PexFile(BaseModel):
 
         self.header.dump(output)
         self.string_table.dump(output)
+        self.debug_info.dump(output)

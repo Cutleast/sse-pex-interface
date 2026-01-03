@@ -32,6 +32,10 @@ class TestPexFile:
         assert pex_file.header.username == "TechAngel"
         assert pex_file.header.machinename == "DESKTOP-O95F7AQ"
         assert pex_file.string_table.count == 624
+        assert pex_file.debug_info.has_debug_info == 1
+        assert pex_file.debug_info.function_count == 14
+        assert pex_file.debug_info.functions is not None
+        assert len(pex_file.debug_info.functions) == 14
 
     def test_dump(self) -> None:
         """
