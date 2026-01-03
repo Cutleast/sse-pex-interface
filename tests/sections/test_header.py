@@ -6,7 +6,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-from sse_pex_interface.header import Header
+from sse_pex_interface.sections import Header
 
 
 class TestHeader:

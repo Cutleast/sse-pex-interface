@@ -6,7 +6,7 @@ from typing import BinaryIO, Literal, Self
 
 from pydantic import BaseModel
 
-from .datatypes import IntegerCodec, StringCodec
+from ..datatypes import IntegerCodec, StringCodec
 
 
 class Header(BaseModel):

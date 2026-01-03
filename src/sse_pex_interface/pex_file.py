@@ -6,9 +6,7 @@ from typing import BinaryIO, Self
 
 from pydantic import BaseModel
 
-from sse_pex_interface.string_table import StringTable
-
-from .header import Header
+from .sections import Header, StringTable
 
 
 class PexFile(BaseModel):

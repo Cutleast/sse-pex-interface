@@ -6,7 +6,7 @@ from typing import BinaryIO, Self
 
 from pydantic import BaseModel
 
-from .datatypes import IntegerCodec, StringCodec
+from ..datatypes import IntegerCodec, StringCodec
 
 
 class StringTable(BaseModel):
