@@ -28,31 +28,42 @@ class VariableData(BinaryModel):
     """uint8: Type of the variable."""
 
     data: Optional[int | float]
-    """uint16 | int32 | float32 | uint8: Data of the variable."""
+    """uint16 | int32 | uint32 | float32 | uint8: Data of the variable."""
+
+    integer_unsigned: bool
+    """If the variable type is integer, the data is interpreted as an uint32."""
 
     @override
     @classmethod
-    def parse(cls, stream: BinaryIO) -> Self:
+    def parse(cls, stream: BinaryIO, integer_unsigned: bool = False) -> Self:
         type = cls.Type(IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8))
 
         data: Optional[int | float] = None
         match type:
+            case VariableData.Type.NULL:
+                pass
             case VariableData.Type.IDENTIFIER | VariableData.Type.STRING:
                 data = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
             case VariableData.Type.INTEGER:
-                data = IntegerCodec.parse(stream, IntegerCodec.IntType.Int32)
+                if integer_unsigned:
+                    data = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt32)
+                else:
+                    data = IntegerCodec.parse(stream, IntegerCodec.IntType.Int32)
             case VariableData.Type.FLOAT:
                 data = FloatCodec.parse(stream, FloatCodec.FloatType.Float32)
             case VariableData.Type.BOOL:
                 data = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8)
 
-        return cls(type=type, data=data)
+        return cls(type=type, data=data, integer_unsigned=integer_unsigned)
 
     @override
     def dump(self, output: BinaryIO) -> None:
-        IntegerCodec.dump(self.type.value, IntegerCodec.IntType.UInt8, output)
+        IntegerCodec.dump(self.type, IntegerCodec.IntType.UInt8, output)
 
         match self.type:
+            case VariableData.Type.NULL:
+                pass
+
             case VariableData.Type.IDENTIFIER | VariableData.Type.STRING:
                 if not isinstance(self.data, int):
                     raise ValueError(f"Data for type '{self.type}' must be an integer!")
@@ -63,7 +74,10 @@ class VariableData(BinaryModel):
                 if not isinstance(self.data, int):
                     raise ValueError(f"Data for type '{self.type}' must be an integer!")
 
-                IntegerCodec.dump(self.data, IntegerCodec.IntType.Int32, output)
+                if self.integer_unsigned:
+                    IntegerCodec.dump(self.data, IntegerCodec.IntType.UInt32, output)
+                else:
+                    IntegerCodec.dump(self.data, IntegerCodec.IntType.Int32, output)
 
             case VariableData.Type.FLOAT:
                 if not isinstance(self.data, float):

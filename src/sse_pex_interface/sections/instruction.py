@@ -141,12 +141,14 @@ class Instruction(BinaryModel):
 
         arguments: list[VariableData] = []
 
-        fixed_arg_count: int
+        fixed_arg_count: int = 0
         has_varargs: bool = False
+        integer_unsigned: bool = False
+        """if variable data of type integer should be interpreted as unsigned"""
 
         match op:
             case Instruction.OpCode.NOP:
-                fixed_arg_count = 0
+                pass
 
             case (
                 Instruction.OpCode.IADD
@@ -164,39 +166,28 @@ class Instruction(BinaryModel):
                 | Instruction.OpCode.CMP_GT
                 | Instruction.OpCode.CMP_GE
                 | Instruction.OpCode.STRCAT
+                | Instruction.OpCode.PROPGET
+                | Instruction.OpCode.PROPSET
+                | Instruction.OpCode.ARRAY_GETELEMENT
+                | Instruction.OpCode.ARRAY_SETELEMENT
             ):
                 fixed_arg_count = 3
 
             case (
                 Instruction.OpCode.NOT
-                | Instruction.OpCode.ASSIGN
-                | Instruction.OpCode.CAST
-                | Instruction.OpCode.RETURN
                 | Instruction.OpCode.INEG
                 | Instruction.OpCode.FNEG
+                | Instruction.OpCode.ASSIGN
+                | Instruction.OpCode.CAST
                 | Instruction.OpCode.JMPT
                 | Instruction.OpCode.JMPF
-                | Instruction.OpCode.PROPSET
             ):
                 fixed_arg_count = 2
 
-            case Instruction.OpCode.JMP | Instruction.OpCode.ARRAY_CREATE:
+            case Instruction.OpCode.JMP | Instruction.OpCode.RETURN:
                 fixed_arg_count = 1
 
-            case (
-                Instruction.OpCode.PROPGET
-                | Instruction.OpCode.ARRAY_LENGTH
-                | Instruction.OpCode.ARRAY_GETELEMENT
-            ):
-                fixed_arg_count = 2
-
-            case (
-                Instruction.OpCode.ARRAY_FINDELEMENT
-                | Instruction.OpCode.ARRAY_RFINDELEMENT
-            ):
-                fixed_arg_count = 4
-
-            case Instruction.OpCode.CALLMETHOD:
+            case Instruction.OpCode.CALLMETHOD | Instruction.OpCode.CALLSTATIC:
                 fixed_arg_count = 3
                 has_varargs = True
 
@@ -204,23 +195,28 @@ class Instruction(BinaryModel):
                 fixed_arg_count = 2
                 has_varargs = True
 
-            case Instruction.OpCode.CALLSTATIC:
-                fixed_arg_count = 3
-                has_varargs = True
+            case Instruction.OpCode.ARRAY_CREATE | Instruction.OpCode.ARRAY_LENGTH:
+                fixed_arg_count = 2
 
-            case _:
-                raise ValueError(f"Unsupported opcode: {op}")
+                if op == Instruction.OpCode.ARRAY_CREATE:
+                    integer_unsigned = True
+
+            case (
+                Instruction.OpCode.ARRAY_FINDELEMENT
+                | Instruction.OpCode.ARRAY_RFINDELEMENT
+            ):
+                fixed_arg_count = 4
 
         for _ in range(fixed_arg_count):
-            arguments.append(VariableData.parse(stream))
+            arguments.append(VariableData.parse(stream, integer_unsigned))
 
         if has_varargs:
-            vararg_count = VariableData.parse(stream)
+            vararg_count: VariableData = VariableData.parse(stream)
             arguments.append(vararg_count)
 
             count: int = cast(int, vararg_count.data)
             for _ in range(count):
-                arguments.append(VariableData.parse(stream))
+                arguments.append(VariableData.parse(stream, integer_unsigned))
 
         return cls(op=op, arguments=arguments)
 

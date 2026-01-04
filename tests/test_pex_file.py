@@ -57,3 +57,11 @@ class TestPexFile:
 
         # then
         assert pex_file == dumped_pex_file
+
+        # when (verify that the parser is symmetrical)
+        original_data: bytes = pex_file_path.read_bytes()
+        output.seek(0)
+        dumped_data: bytes = output.read()
+
+        # then
+        assert dumped_data == original_data
