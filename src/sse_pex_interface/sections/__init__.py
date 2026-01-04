@@ -12,7 +12,6 @@ from .object import Object
 from .object_data import ObjectData
 from .property import Property
 from .state import State
-from .string_table import StringTable
 from .user_flag import UserFlag
 from .variable import Variable
 from .variable_data import VariableData
@@ -29,7 +28,6 @@ __all__ = [
     "ObjectData",
     "Property",
     "State",
-    "StringTable",
     "UserFlag",
     "Variable",
     "VariableData",

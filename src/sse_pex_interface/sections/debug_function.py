@@ -25,9 +25,6 @@ class DebugFunction(BinaryModel):
     function_type: Literal[0, 1, 2, 3]
     """uint8: Function type."""
 
-    instruction_count: int
-    """uint16: Number of instructions."""
-
     line_numbers: list[int]
     """uint16[instruction_count]: Maps instructions to their original lines in the source."""
 
@@ -40,8 +37,8 @@ class DebugFunction(BinaryModel):
             stream, IntegerCodec.IntType.UInt16
         )
         function_type: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8)
-        instruction_count: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
 
+        instruction_count: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
         line_numbers: list[int] = []
         for _ in range(instruction_count):
             line_numbers.append(IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16))
@@ -58,20 +55,16 @@ class DebugFunction(BinaryModel):
             state_name_index=state_name_index,
             function_name_index=function_name_index,
             function_type=function_type,
-            instruction_count=instruction_count,
             line_numbers=line_numbers,
         )
 
     @override
     def dump(self, output: BinaryIO) -> None:
-        if len(self.line_numbers) != self.instruction_count:
-            raise ValueError("Instruction count does not match line number count!")
-
         IntegerCodec.dump(self.object_name_index, IntegerCodec.IntType.UInt16, output)
         IntegerCodec.dump(self.state_name_index, IntegerCodec.IntType.UInt16, output)
         IntegerCodec.dump(self.function_name_index, IntegerCodec.IntType.UInt16, output)
         IntegerCodec.dump(self.function_type, IntegerCodec.IntType.UInt8, output)
-        IntegerCodec.dump(self.instruction_count, IntegerCodec.IntType.UInt16, output)
 
+        IntegerCodec.dump(len(self.line_numbers), IntegerCodec.IntType.UInt16, output)
         for line_number in self.line_numbers:
             IntegerCodec.dump(line_number, IntegerCodec.IntType.UInt16, output)

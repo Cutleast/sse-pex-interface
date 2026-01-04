@@ -2,7 +2,7 @@
 Copyright (c) Cutleast
 """
 
-from typing import BinaryIO, Optional, Self, cast, override
+from typing import BinaryIO, Optional, Self, override
 
 from ..binary_model import BinaryModel
 from ..datatypes import IntegerCodec
@@ -82,6 +82,26 @@ class Property(BinaryModel):
 
     @override
     def dump(self, output: BinaryIO) -> None:
+        IntegerCodec.dump(self.name, IntegerCodec.IntType.UInt16, output)
+        IntegerCodec.dump(self.type, IntegerCodec.IntType.UInt16, output)
+        IntegerCodec.dump(self.docstring, IntegerCodec.IntType.UInt16, output)
+        IntegerCodec.dump(self.user_flags, IntegerCodec.IntType.UInt32, output)
+        IntegerCodec.dump(self.flags, IntegerCodec.IntType.UInt8, output)
+
+        if (self.flags & 4) != 0:
+            assert self.auto_var_name is not None
+            IntegerCodec.dump(self.auto_var_name, IntegerCodec.IntType.UInt16, output)
+
+        if (self.flags & 5) == 1:
+            assert self.read_handler is not None
+            self.read_handler.dump(output)
+
+        if (self.flags & 6) == 2:
+            assert self.write_handler is not None
+            self.write_handler.dump(output)
+
+    @override
+    def validate_model(self) -> None:
         if (self.flags & 4) != 0 and self.auto_var_name is None:
             raise ValueError("'auto_var_name' is required if `(flags & 4) != 0`!")
 
@@ -90,20 +110,3 @@ class Property(BinaryModel):
 
         if (self.flags & 6) == 2 and self.write_handler is None:
             raise ValueError("'write_handler' is required if `(flags & 6) == 2`!")
-
-        IntegerCodec.dump(self.name, IntegerCodec.IntType.UInt16, output)
-        IntegerCodec.dump(self.type, IntegerCodec.IntType.UInt16, output)
-        IntegerCodec.dump(self.docstring, IntegerCodec.IntType.UInt16, output)
-        IntegerCodec.dump(self.user_flags, IntegerCodec.IntType.UInt32, output)
-        IntegerCodec.dump(self.flags, IntegerCodec.IntType.UInt8, output)
-
-        if (self.flags & 4) != 0:
-            IntegerCodec.dump(
-                cast(int, self.auto_var_name), IntegerCodec.IntType.UInt16, output
-            )
-
-        if (self.flags & 5) == 1:
-            cast(Function, self.read_handler).dump(output)
-
-        if (self.flags & 6) == 2:
-            cast(Function, self.write_handler).dump(output)

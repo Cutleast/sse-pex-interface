@@ -65,14 +65,11 @@ class VariableData(BinaryModel):
                 pass
 
             case VariableData.Type.IDENTIFIER | VariableData.Type.STRING:
-                if not isinstance(self.data, int):
-                    raise ValueError(f"Data for type '{self.type}' must be an integer!")
-
+                assert isinstance(self.data, int)
                 IntegerCodec.dump(self.data, IntegerCodec.IntType.UInt16, output)
 
             case VariableData.Type.INTEGER:
-                if not isinstance(self.data, int):
-                    raise ValueError(f"Data for type '{self.type}' must be an integer!")
+                assert isinstance(self.data, int)
 
                 if self.integer_unsigned:
                     IntegerCodec.dump(self.data, IntegerCodec.IntType.UInt32, output)
@@ -80,13 +77,29 @@ class VariableData(BinaryModel):
                     IntegerCodec.dump(self.data, IntegerCodec.IntType.Int32, output)
 
             case VariableData.Type.FLOAT:
-                if not isinstance(self.data, float):
-                    raise ValueError(f"Data for type '{self.type}' must be a float!")
-
+                assert isinstance(self.data, float)
                 FloatCodec.dump(self.data, FloatCodec.FloatType.Float32, output)
 
             case VariableData.Type.BOOL:
-                if not isinstance(self.data, int):
-                    raise ValueError(f"Data for type '{self.type}' must be an integer!")
-
+                assert isinstance(self.data, int)
                 IntegerCodec.dump(self.data, IntegerCodec.IntType.UInt8, output)
+
+    @override
+    def validate_model(self) -> None:
+        match self.type:
+            case VariableData.Type.NULL:
+                if self.data is not None:
+                    raise TypeError("Data for type 'NULL' must be None!")
+
+            case (
+                VariableData.Type.IDENTIFIER
+                | VariableData.Type.STRING
+                | VariableData.Type.INTEGER
+                | VariableData.Type.BOOL
+            ):
+                if not isinstance(self.data, int):
+                    raise TypeError(f"Data for type '{self.type}' must be an integer!")
+
+            case VariableData.Type.FLOAT:
+                if not isinstance(self.data, float):
+                    raise TypeError(f"Data for type '{self.type}' must be a float!")

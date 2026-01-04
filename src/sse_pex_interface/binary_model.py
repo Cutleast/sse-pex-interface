@@ -5,7 +5,7 @@ Copyright (c) Cutleast
 from abc import ABC, abstractmethod
 from typing import BinaryIO, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class BinaryModel(BaseModel, ABC):
@@ -13,6 +13,8 @@ class BinaryModel(BaseModel, ABC):
     Abstract base class for all models that can be deserialized from and serialized to
     binary.
     """
+
+    model_config = ConfigDict(validate_assignment=True)
 
     @classmethod
     @abstractmethod
@@ -35,3 +37,17 @@ class BinaryModel(BaseModel, ABC):
         Args:
             output (BinaryIO): Byte stream to write to.
         """
+
+    def validate_model(self) -> None:
+        """
+        Validates the model's data after deserialization from bytes.
+
+        Raises:
+            ValidationError: If the model's data is invalid.
+        """
+
+    @model_validator(mode="after")
+    def _validate_model(self) -> Self:
+        self.validate_model()
+
+        return self

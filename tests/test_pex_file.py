@@ -31,12 +31,17 @@ class TestPexFile:
         assert pex_file.header.source_file_name == "_WetQuestScript.psc"
         assert pex_file.header.username == "TechAngel"
         assert pex_file.header.machinename == "DESKTOP-O95F7AQ"
-        assert pex_file.string_table.count == 624
+        assert len(pex_file.string_table) == 624
+        assert pex_file.string_table[:5] == [
+            "_wetquestscript",
+            "",
+            "GetState",
+            "GotoState",
+            "ScanArea",
+        ]
         assert pex_file.debug_info.has_debug_info == 1
-        assert pex_file.debug_info.function_count == 14
         assert pex_file.debug_info.functions is not None
         assert len(pex_file.debug_info.functions) == 14
-        assert pex_file.user_flag_count == 2
         assert len(pex_file.user_flags) == 2
 
     def test_dump(self) -> None:

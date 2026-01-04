@@ -28,20 +28,11 @@ class ObjectData(BinaryModel):
     auto_state_name: int
     """uint16: Index(base 0) into string table."""
 
-    num_variables: int
-    """uint16: Number of variables."""
-
     variables: list[Variable]
     """List of variables."""
 
-    num_properties: int
-    """uint16: Number of properties."""
-
     properties: list[Property]
     """List of properties."""
-
-    num_states: int
-    """uint16: Number of states."""
 
     states: list[State]
     """List of states."""
@@ -74,45 +65,26 @@ class ObjectData(BinaryModel):
             docstring=docstring,
             user_flags=user_flags,
             auto_state_name=auto_state_name,
-            num_variables=num_variables,
             variables=variables,
-            num_properties=num_properties,
             properties=properties,
-            num_states=num_states,
             states=states,
         )
 
     @override
     def dump(self, output: BinaryIO) -> None:
-        if len(self.variables) != self.num_variables:
-            raise ValueError(
-                "Value of 'num_variables' does not match actual variable count!"
-            )
-
-        if len(self.properties) != self.num_properties:
-            raise ValueError(
-                "Value of 'num_properties' does not match actual property count!"
-            )
-
-        if len(self.states) != self.num_states:
-            raise ValueError("Value of 'num_states' does not match actual state count!")
-
         IntegerCodec.dump(self.parent_class_name, IntegerCodec.IntType.UInt16, output)
         IntegerCodec.dump(self.docstring, IntegerCodec.IntType.UInt16, output)
         IntegerCodec.dump(self.user_flags, IntegerCodec.IntType.UInt32, output)
         IntegerCodec.dump(self.auto_state_name, IntegerCodec.IntType.UInt16, output)
 
-        IntegerCodec.dump(self.num_variables, IntegerCodec.IntType.UInt16, output)
-
+        IntegerCodec.dump(len(self.variables), IntegerCodec.IntType.UInt16, output)
         for variable in self.variables:
             variable.dump(output)
 
-        IntegerCodec.dump(self.num_properties, IntegerCodec.IntType.UInt16, output)
-
+        IntegerCodec.dump(len(self.properties), IntegerCodec.IntType.UInt16, output)
         for property in self.properties:
             property.dump(output)
 
-        IntegerCodec.dump(self.num_states, IntegerCodec.IntType.UInt16, output)
-
+        IntegerCodec.dump(len(self.states), IntegerCodec.IntType.UInt16, output)
         for state in self.states:
             state.dump(output)

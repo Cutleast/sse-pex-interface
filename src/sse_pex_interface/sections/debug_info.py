@@ -22,9 +22,6 @@ class DebugInfo(BinaryModel):
     uint64: Modification time of the file. Only present if `has_debug_info` is non-zero.
     """
 
-    function_count: Optional[int]
-    """uint16: Number of functions. Only present if `has_debug_info` is non-zero."""
-
     functions: Optional[list[DebugFunction]]
     """list: List of functions. Only present if `has_debug_info` is non-zero."""
 
@@ -34,13 +31,14 @@ class DebugInfo(BinaryModel):
         has_debug_info: int = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt8)
 
         modification_time: Optional[int] = None
-        function_count: Optional[int] = None
         functions: Optional[list[DebugFunction]] = None
 
         if has_debug_info != 0:
             modification_time = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt64)
-            function_count = IntegerCodec.parse(stream, IntegerCodec.IntType.UInt16)
 
+            function_count: int = IntegerCodec.parse(
+                stream, IntegerCodec.IntType.UInt16
+            )
             functions = []
             for _ in range(function_count):
                 functions.append(DebugFunction.parse(stream))
@@ -48,42 +46,33 @@ class DebugInfo(BinaryModel):
         return cls(
             has_debug_info=has_debug_info,
             modification_time=modification_time,
-            function_count=function_count,
             functions=functions,
         )
 
     @override
     def dump(self, output: BinaryIO) -> None:
-        if (
-            self.function_count is not None
-            and self.functions is not None
-            and len(self.functions) != self.function_count
-        ):
-            raise ValueError("Function count does not match function count!")
-
         IntegerCodec.dump(self.has_debug_info, IntegerCodec.IntType.UInt8, output)
 
+        if self.has_debug_info != 0:
+            assert self.modification_time is not None
+            IntegerCodec.dump(
+                self.modification_time, IntegerCodec.IntType.UInt64, output
+            )
+
+            assert self.functions is not None
+            IntegerCodec.dump(len(self.functions), IntegerCodec.IntType.UInt16, output)
+            for function in self.functions:
+                function.dump(output)
+
+    @override
+    def validate_model(self) -> None:
         if self.has_debug_info != 0:
             if self.modification_time is None:
                 raise ValueError(
                     "Modification time is required when has_debug_info is non-zero."
                 )
 
-            IntegerCodec.dump(
-                self.modification_time, IntegerCodec.IntType.UInt64, output
-            )
-
-            if self.function_count is None:
-                raise ValueError(
-                    "Function count is required when has_debug_info is non-zero."
-                )
-
-            IntegerCodec.dump(self.function_count, IntegerCodec.IntType.UInt16, output)
-
             if self.functions is None:
                 raise ValueError(
                     "Functions are required when has_debug_info is non-zero."
                 )
-
-            for function in self.functions:
-                function.dump(output)
