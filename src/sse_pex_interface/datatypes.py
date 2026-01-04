@@ -9,7 +9,7 @@ from typing import BinaryIO, Literal, Optional, Self, overload
 
 class IntegerCodec:
     """
-    Codec class all types of signed and unsigned integers.
+    Codec class for all types of signed and unsigned integers.
     """
 
     class IntType(Enum):
